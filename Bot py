@@ -1,0 +1,41 @@
+import requests
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+
+BOT_TOKEN = "8968451782:AAE8s0OcbqUp8t88SRvTBrmKxyCoezwiSdc"
+ADMIN_ID = 1271362249
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ You are not authorized.")
+        return
+
+    await update.message.reply_text(
+        "Send me a Pakistani mobile number.\nExample:\n03067289762"
+    )
+
+async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    number = update.message.text.strip()
+
+    url = f"https://famofc.site/api/database.php/?q={number}"
+
+    try:
+        r = requests.get(url, timeout=20)
+        await update.message.reply_text(r.text)
+    except Exception as e:
+        await update.message.reply_text(f"Error:\n{e}")
+
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, search))
+
+    print("Bot Started...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
